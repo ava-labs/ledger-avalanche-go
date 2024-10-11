@@ -120,13 +120,15 @@ func (ledger *LedgerAvalanche) GetPubKey(path string, show bool, hrp string, cha
 	}
 
 	// Prepare message
-	header := []byte{CLA, INS_GET_ADDR, p1, 0, 0}
-	message := append(header, serializedHRP...)
-	message = append(message, serializedChainID...)
-	message = append(message, serializedPath...)
-	message[4] = byte(len(message) - len(header)) // update length
+	payload := []byte{CLA, INS_GET_ADDR, p1, 0, 0}
+	headerLen := len(payload)
 
-	response, err := ledger.api.Exchange(message)
+	payload = append(payload, serializedHRP...)
+	payload = append(payload, serializedChainID...)
+	payload = append(payload, serializedPath...)
+	payload[4] = byte(len(payload) - headerLen) // update length
+
+	response, err := ledger.api.Exchange(payload)
 	if err != nil {
 		return nil, err
 	}
@@ -171,13 +173,14 @@ func (ledger *LedgerAvalanche) GetExtPubKey(path string, show bool, hrp string, 
 	}
 
 	// Prepare message
-	header := []byte{CLA, INS_GET_EXTENDED_PUBLIC_KEY, p1, 0, 0}
-	message := append(header, serializedHRP...)
-	message = append(message, serializedChainID...)
-	message = append(message, serializedPath...)
-	message[4] = byte(len(message) - len(header)) // update length
+	payload := []byte{CLA, INS_GET_EXTENDED_PUBLIC_KEY, p1, 0, 0}
+	headerLen := len(payload)
+	payload = append(payload, serializedHRP...)
+	payload = append(payload, serializedChainID...)
+	payload = append(payload, serializedPath...)
+	payload[4] = byte(len(payload) - headerLen) // update length
 
-	response, err := ledger.api.Exchange(message)
+	response, err := ledger.api.Exchange(payload)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -207,9 +210,9 @@ func (ledger *LedgerAvalanche) Sign(pathPrefix string, signingPaths []string, me
 
 	payloadType := PAYLOAD_INIT
 	p2 := FIRST_MESSAGE
-	header := []byte{CLA, INS_SIGN, byte(payloadType), byte(p2), byte(len(serializedPath))}
-	bytesToSend := append(header, serializedPath...)
-	_, err = ledger.api.Exchange(bytesToSend)
+	payload := []byte{CLA, INS_SIGN, byte(payloadType), byte(p2), byte(len(serializedPath))}
+	payload = append(payload, serializedPath...)
+	_, err = ledger.api.Exchange(payload)
 	if err != nil {
 		return nil, errors.New("command rejected")
 	}
@@ -228,9 +231,9 @@ func (ledger *LedgerAvalanche) Sign(pathPrefix string, signingPaths []string, me
 		chunk := msg[i:end]
 		chunkSize := end - i
 
-		header := []byte{CLA, INS_SIGN, byte(payloadType), byte(p2), byte(chunkSize)}
-		bytesToSend := append(header, chunk...)
-		response, err := ledger.api.Exchange(bytesToSend)
+		payload := []byte{CLA, INS_SIGN, byte(payloadType), byte(p2), byte(chunkSize)}
+		payload = append(payload, chunk...)
+		response, err := ledger.api.Exchange(payload)
 		if err != nil {
 			if err.Error() == "[APDU_CODE_BAD_KEY_HANDLE] The parameters in the data field are incorrect" {
 				// In this special case, we can extract additional info
@@ -258,10 +261,10 @@ func (ledger *LedgerAvalanche) SignHash(pathPrefix string, signingPaths []string
 		return nil, err
 	}
 
-	header := []byte{CLA, INS_SIGN_HASH, FIRST_MESSAGE, byte(0x00), byte(len(serializedPath) + len(hash))}
-	bytesToSend := append(header, serializedPath...)
-	bytesToSend = append(bytesToSend, hash...)
-	firstResponse, err := ledger.api.Exchange(bytesToSend)
+	payload := []byte{CLA, INS_SIGN_HASH, FIRST_MESSAGE, byte(0x00), byte(len(serializedPath) + len(hash))}
+	payload = append(payload, serializedPath...)
+	payload = append(payload, hash...)
+	firstResponse, err := ledger.api.Exchange(payload)
 
 	if err != nil {
 		return nil, errors.New("command rejected")
@@ -289,9 +292,9 @@ func SignAndCollect(signingPaths []string, ledger *LedgerAvalanche) (*ResponseSi
 		}
 
 		// Send path to sign hash that should be in device's ram memory
-		header := []byte{CLA, INS_SIGN_HASH, byte(p1), byte(0x00), byte(len(pathBuf))}
-		bytesToSend := append(header, pathBuf...)
-		response, err := ledger.api.Exchange(bytesToSend)
+		payload := []byte{CLA, INS_SIGN_HASH, byte(p1), byte(0x00), byte(len(pathBuf))}
+		payload = append(payload, pathBuf...)
+		response, err := ledger.api.Exchange(payload)
 
 		if err != nil {
 			return nil, err

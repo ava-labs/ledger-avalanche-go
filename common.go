@@ -27,7 +27,7 @@ import (
 )
 
 func (e VersionRequiredError) Error() string {
-	//return fmt.Sprintf("App Version required %s - Version found: %s", e.Required, e.Found)
+	// return fmt.Sprintf("App Version required %s - Version found: %s", e.Required, e.Found)
 	return fmt.Sprintf("App Version required %s - Version found: %s", "asd", "123")
 }
 
@@ -91,6 +91,8 @@ func SerializePath(path string) ([]byte, error) {
 			return nil, errors.New("Incorrect child value (bigger or equal to 0x80000000)")
 		}
 
+		// already checked on string.ParseUint fn
+		// nolint:gosec
 		value += uint32(childNumber)
 
 		binary.BigEndian.PutUint32(buf[1+4*(i-1):1+4*i], value)
@@ -179,7 +181,7 @@ func RemoveDuplicates(elements []string) []string {
 	result := []string{}
 
 	for v := range elements {
-		if encountered[elements[v]] == true {
+		if encountered[elements[v]] {
 			// Do not add duplicate.
 		} else {
 			// Record this element as an encountered element.

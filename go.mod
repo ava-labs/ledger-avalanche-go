@@ -1,6 +1,6 @@
-module github.com/ava-labs/ledger-avalanche/go
+module github.com/ava-labs/ledger-avalanche-go
 
-go 1.21
+go 1.22
 
 toolchain go1.22.1
 

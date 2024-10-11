@@ -48,12 +48,6 @@ const (
 	INS_SIGN                    = 0x05
 	INS_SIGN_MSG                = 0x06
 
-	userINSGetVersion       = 0
-	userINSSignSECP256K1    = 2
-	userINSGetAddrSecp256k1 = 4
-
-	userMessageChunkSize = 250
-
 	HARDENED = 0x80000000
 )
 

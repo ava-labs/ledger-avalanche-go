@@ -34,7 +34,7 @@ func Test_UserFindLedger(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 
 	assert.NotNil(t, userApp)
@@ -47,7 +47,7 @@ func Test_UserGetVersion(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 	defer userApp.Close()
 
@@ -67,7 +67,7 @@ func Test_UserGetPublicKey(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 	defer userApp.Close()
 
@@ -116,7 +116,7 @@ func Test_UserGetPublicKeyETH(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 	defer userApp.Close()
 
@@ -156,7 +156,7 @@ func Test_UserPK_HDPaths(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 	defer userApp.Close()
 
@@ -205,15 +205,15 @@ func Test_UserPK_HDPaths(t *testing.T) {
 	}
 }
 
-//func Test_UserSignMsg(t *testing.T) {
-//	userApp, err := FindLedgerAvalancheApp()
-//	if err != nil {
-//		t.Fatalf(err.Error())
-//	}
-//	defer userApp.Close()
+// func Test_UserSignMsg(t *testing.T) {
+// 	userApp, err := FindLedgerAvalancheApp()
+// 	if err != nil {
+// 		t.Fatalf(err.Error())
+// 	}
+// 	defer userApp.Close()
 //
-//	message := "Welcome to OpenSea!\n\nClick to sign in and accept the OpenSea Terms of Service: https://opensea.io/tos\n\nThis request will not trigger a blockchain transaction or cost any gas fees.\n\nYour authentication status will reset after 24 hours.\n\nWallet address:\n0x9858effd232b4033e47d90003d41ec34ecaeda94\n\nNonce:\n2b02c8a0-f74f-4554-9821-a28054dc9121"
-//}
+// 	message := "Welcome to OpenSea!\n\nClick to sign in and accept the OpenSea Terms of Service: https://opensea.io/tos\n\nThis request will not trigger a blockchain transaction or cost any gas fees.\n\nYour authentication status will reset after 24 hours.\n\nWallet address:\n0x9858effd232b4033e47d90003d41ec34ecaeda94\n\nNonce:\n2b02c8a0-f74f-4554-9821-a28054dc9121"
+// }
 
 func Test_UserSign(t *testing.T) {
 	if testing.Short() {
@@ -221,7 +221,7 @@ func Test_UserSign(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 	defer userApp.Close()
 
@@ -300,7 +300,7 @@ func Test_UserSign(t *testing.T) {
 	hrp := ""
 	chainID := ""
 	h := sha256.New()
-	h.Write([]byte(simpleTransferData))
+	h.Write(simpleTransferData)
 	msgHash := h.Sum(nil)
 
 	err = userApp.VerifyMultipleSignatures(*response, msgHash, rootPath, signers, hrp, chainID)
@@ -315,7 +315,7 @@ func Test_UserSignHash(t *testing.T) {
 	}
 	userApp, err := FindLedgerAvalancheApp()
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("error: %v", err.Error())
 	}
 	defer userApp.Close()
 
