@@ -1,0 +1,23 @@
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - gofmt
+    - gosec
+    - goconst
+    - gocritic
+    - gosimple
+    - goconst
+    - bodyclose
+    - unconvert
+    - unparam
+    - unused
+    - durationcheck
+    - makezero
+    - nilerr
+    - reassign
+    - copyloopvar
+    - gosimple
+    - staticcheck
+    - unused
