@@ -19,3 +19,6 @@ mod-update: ## Mod Update
 
 build:
 	go build .
+
+test:
+	go test
