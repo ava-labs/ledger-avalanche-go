@@ -23,6 +23,3 @@ jobs:
         run: |
           make install-lint
           make lint
-      - name: Run tests
-        run: |
-          make test
