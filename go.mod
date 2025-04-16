@@ -1,8 +1,7 @@
 module github.com/ava-labs/ledger-avalanche-go
 
 go 1.22
-
-toolchain go1.22.1
+toolchain go1.24.1
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
@@ -19,9 +18,9 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
-	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.66.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
