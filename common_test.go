@@ -18,8 +18,9 @@ package ledger_avalanche_go
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_PrintVersion(t *testing.T) {
@@ -32,7 +33,6 @@ func Test_SerializePath(t *testing.T) {
 	path := "m/44'/9000'/0'/0/0"
 	expectedSerializedPath := []byte{0x05, 0x80, 0x00, 0x00, 0x2C, 0x80, 0x00, 0x23, 0x28, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 	serializedPath, err := SerializePath(path)
-
 	if err != nil {
 		t.Fatalf("Detected error, err: %s\n", err.Error())
 	}
@@ -89,5 +89,4 @@ func Test_RemoveDuplicates(t *testing.T) {
 }
 
 func Test_ConcatMessageAndChangePath(t *testing.T) {
-
 }

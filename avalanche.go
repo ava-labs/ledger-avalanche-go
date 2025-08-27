@@ -35,7 +35,7 @@ func FindLedgerAvalancheApp() (_ *LedgerAvalanche, rerr error) {
 
 	defer func() {
 		if rerr != nil {
-			ledgerAPI.Close()
+			_ = ledgerAPI.Close()
 		}
 	}()
 
@@ -74,20 +74,19 @@ func (ledger *LedgerAvalanche) CheckVersion(ver VersionInfo) error {
 func (ledger *LedgerAvalanche) GetVersion() (*VersionInfo, error) {
 	message := []byte{CLA, INS_GET_VERSION, 0, 0, 0}
 	response, err := ledger.api.Exchange(message)
-
 	if err != nil {
 		return nil, err
 	}
 
-	if len(response) < 4 {
+	if len(response) < 7 {
 		return nil, errors.New("invalid response")
 	}
 
 	ledger.version = VersionInfo{
 		AppMode: response[0],
-		Major:   response[1],
-		Minor:   response[2],
-		Patch:   response[3],
+		Major:   response[2], // Skip byte 1, use byte 2
+		Minor:   response[4], // Skip byte 3, use byte 4
+		Patch:   response[6], // Skip byte 5, use byte 6
 	}
 
 	return &ledger.version, nil
@@ -134,7 +133,7 @@ func (ledger *LedgerAvalanche) GetPubKey(path string, show bool, hrp string, cha
 	}
 
 	if len(response) < 35+len(hrp) {
-		return nil, errors.New("Invalid response")
+		return nil, errors.New("invalid response")
 	}
 
 	// [publicKeyLen | publicKey | hash | address | errorCode]
@@ -186,7 +185,7 @@ func (ledger *LedgerAvalanche) GetExtPubKey(path string, show bool, hrp string, 
 	}
 
 	if len(response) < 32 {
-		return nil, nil, errors.New("Invalid response")
+		return nil, nil, errors.New("invalid response")
 	}
 
 	publicKeyLen := response[0]
@@ -208,42 +207,27 @@ func (ledger *LedgerAvalanche) Sign(pathPrefix string, signingPaths []string, me
 		return nil, err
 	}
 
-	payloadType := PAYLOAD_INIT
-	p2 := FIRST_MESSAGE
-	payload := []byte{CLA, INS_SIGN, byte(payloadType), byte(p2), byte(len(serializedPath))}
-	payload = append(payload, serializedPath...)
-	_, err = ledger.api.Exchange(payload)
-	if err != nil {
-		return nil, errors.New("command rejected")
-	}
-
 	msg := ConcatMessageAndChangePath(message, paths)
 
-	for i := 0; i < len(msg); i += CHUNK_SIZE {
-		end := i + CHUNK_SIZE
-		payloadType := PAYLOAD_ADD
-		p2 := 0
+	// Prepare chunks using ledger-go's PrepareChunks function
+	chunks := ledger_go.PrepareChunks(serializedPath, msg)
 
-		if end > len(msg) {
-			end = len(msg)
-			payloadType = PAYLOAD_LAST
+	// Custom error handler for Avalanche-specific errors
+	errorHandler := func(err error, response []byte, instruction byte) error {
+		if err.Error() == "[APDU_CODE_BAD_KEY_HANDLE] The parameters in the data field are incorrect" {
+			// In this special case, we can extract additional info
+			return fmt.Errorf("%w extra_info=(%s)", err, string(response))
 		}
-		chunk := msg[i:end]
-		chunkSize := end - i
+		if err.Error() == "[APDU_CODE_DATA_INVALID] Referenced data reversibly blocked (invalidated)" {
+			return fmt.Errorf("%w extra_info=(%s)", err, string(response))
+		}
+		return err
+	}
 
-		payload := []byte{CLA, INS_SIGN, byte(payloadType), byte(p2), byte(chunkSize)}
-		payload = append(payload, chunk...)
-		response, err := ledger.api.Exchange(payload)
-		if err != nil {
-			if err.Error() == "[APDU_CODE_BAD_KEY_HANDLE] The parameters in the data field are incorrect" {
-				// In this special case, we can extract additional info
-				return nil, fmt.Errorf("%w extra_info=(%s)", err, string(response))
-			}
-			if err.Error() == "[APDU_CODE_DATA_INVALID] Referenced data reversibly blocked (invalidated)" {
-				return nil, fmt.Errorf("%w extra_info=(%s)", err, string(response))
-			}
-			return nil, err
-		}
+	// Process chunks using ledger-go's ProcessChunks function
+	_, err = ledger_go.ProcessChunks(ledger.api, chunks, CLA, INS_SIGN, FIRST_MESSAGE, errorHandler)
+	if err != nil {
+		return nil, err
 	}
 
 	// Transaction was approved so start iterating over signing_paths to sign
@@ -265,7 +249,6 @@ func (ledger *LedgerAvalanche) SignHash(pathPrefix string, signingPaths []string
 	payload = append(payload, serializedPath...)
 	payload = append(payload, hash...)
 	firstResponse, err := ledger.api.Exchange(payload)
-
 	if err != nil {
 		return nil, errors.New("command rejected")
 	}
@@ -295,7 +278,6 @@ func SignAndCollect(signingPaths []string, ledger *LedgerAvalanche) (*ResponseSi
 		payload := []byte{CLA, INS_SIGN_HASH, byte(p1), byte(0x00), byte(len(pathBuf))}
 		payload = append(payload, pathBuf...)
 		response, err := ledger.api.Exchange(payload)
-
 		if err != nil {
 			return nil, err
 		}

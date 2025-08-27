@@ -62,13 +62,13 @@ func NewVersionRequiredError(req VersionInfo, ver VersionInfo) error {
 
 func SerializePath(path string) ([]byte, error) {
 	if !strings.HasPrefix(path, "m") {
-		return nil, errors.New(`Path should start with "m" (e.g "m/44\'/5757\'/5\'/0/3")`)
+		return nil, errors.New(`path should start with "m" (e.g "m/44\'/5757\'/5\'/0/3")`)
 	}
 
 	pathArray := strings.Split(path, "/")
 
 	if len(pathArray) != 6 && len(pathArray) != 5 && len(pathArray) != 4 {
-		return nil, errors.New("Invalid path. (e.g \"m/44'/5757'/5'/0/3\")")
+		return nil, errors.New("invalid path. (e.g \"m/44'/5757'/5'/0/3\")")
 	}
 
 	buf := make([]byte, 1+(len(pathArray)-1)*4)
@@ -84,11 +84,11 @@ func SerializePath(path string) ([]byte, error) {
 
 		childNumber, err := strconv.ParseUint(child, 10, 32)
 		if err != nil {
-			return nil, fmt.Errorf("Invalid path : %s is not a number. (e.g \"m/44'/461'/5'/0/3\")", child)
+			return nil, fmt.Errorf("invalid path : %s is not a number. (e.g \"m/44'/461'/5'/0/3\")", child)
 		}
 
 		if childNumber >= HARDENED {
-			return nil, errors.New("Incorrect child value (bigger or equal to 0x80000000)")
+			return nil, errors.New("incorrect child value (bigger or equal to 0x80000000)")
 		}
 
 		// already checked on string.ParseUint fn
@@ -103,12 +103,12 @@ func SerializePath(path string) ([]byte, error) {
 
 func SerializePathSuffix(path string) ([]byte, error) {
 	if strings.HasPrefix(path, "m") {
-		return nil, errors.New(`Path suffix do not start with "m" (e.g "0/3")`)
+		return nil, errors.New(`path suffix do not start with "m" (e.g "0/3")`)
 	}
 
 	pathArray := strings.Split(path, "/")
 	if len(pathArray) != 2 {
-		return nil, errors.New(`Invalid path suffix. (e.g "0/3")`)
+		return nil, errors.New(`invalid path suffix. (e.g "0/3")`)
 	}
 
 	buf := make([]byte, 1+len(pathArray)*4)
@@ -117,14 +117,14 @@ func SerializePathSuffix(path string) ([]byte, error) {
 	for i, child := range pathArray {
 		value := 0
 		if strings.HasSuffix(child, "'") {
-			return nil, errors.New(`Invalid hardened path suffix. (e.g "0/3")`)
+			return nil, errors.New(`invalid hardened path suffix. (e.g "0/3"`)
 		}
 		childNumber, err := strconv.Atoi(child)
 		if err != nil {
 			return nil, errors.New(`Invalid path: ` + child + ` is not a number. (e.g "0/3")`)
 		}
 		if childNumber >= HARDENED {
-			return nil, errors.New(`Incorrect child value (bigger or equal to 0x80000000)`)
+			return nil, errors.New(`incorrect child value (bigger or equal to 0x80000000)`)
 		}
 		value += childNumber
 
