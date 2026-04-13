@@ -20,6 +20,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -71,8 +72,12 @@ func SerializePath(path string) ([]byte, error) {
 		return nil, errors.New("invalid path. (e.g \"m/44'/5757'/5'/0/3\")")
 	}
 
-	buf := make([]byte, 1+(len(pathArray)-1)*4)
-	buf[0] = byte(len(pathArray) - 1) // first byte is the path length
+	pathLen := len(pathArray) - 1
+	if pathLen > math.MaxUint8 {
+		return nil, errors.New("path too long")
+	}
+	buf := make([]byte, 1+pathLen*4)
+	buf[0] = byte(pathLen)
 
 	for i := 1; i < len(pathArray); i++ {
 		var value uint32
@@ -111,27 +116,26 @@ func SerializePathSuffix(path string) ([]byte, error) {
 		return nil, errors.New(`invalid path suffix. (e.g "0/3")`)
 	}
 
-	buf := make([]byte, 1+len(pathArray)*4)
-	buf[0] = byte(len(pathArray))
+	pathLen := len(pathArray)
+	if pathLen > math.MaxUint8 {
+		return nil, errors.New("path too long")
+	}
+	buf := make([]byte, 1+pathLen*4)
+	buf[0] = byte(pathLen)
 
 	for i, child := range pathArray {
-		value := 0
 		if strings.HasSuffix(child, "'") {
 			return nil, errors.New(`invalid hardened path suffix. (e.g "0/3"`)
 		}
-		childNumber, err := strconv.Atoi(child)
+		childNumber, err := strconv.ParseUint(child, 10, 32)
 		if err != nil {
 			return nil, errors.New(`Invalid path: ` + child + ` is not a number. (e.g "0/3")`)
 		}
 		if childNumber >= HARDENED {
 			return nil, errors.New(`incorrect child value (bigger or equal to 0x80000000)`)
 		}
-		value += childNumber
 
-		buf[1+4*i] = byte(value >> 24)
-		buf[2+4*i] = byte(value >> 16)
-		buf[3+4*i] = byte(value >> 8)
-		buf[4+4*i] = byte(value)
+		binary.BigEndian.PutUint32(buf[1+4*i:5+4*i], uint32(childNumber))
 	}
 
 	return buf, nil
@@ -155,7 +159,11 @@ func SerializeChainID(chainID string) ([]byte, error) {
 		return nil, errors.New("ChainID was not 32 bytes long (encoded with base58)")
 	}
 
-	return append([]byte{byte(len(decoded))}, decoded...), nil
+	n := len(decoded)
+	if n > math.MaxUint8 {
+		return nil, errors.New("ChainID too long")
+	}
+	return append([]byte{byte(n)}, decoded...), nil
 }
 
 // SerializeHrp serializes an HRP into a byte slice
@@ -172,7 +180,11 @@ func SerializeHrp(hrp string) ([]byte, error) {
 		bufHrp = append(bufHrp, byte(c))
 	}
 
-	return append([]byte{byte(len(bufHrp))}, bufHrp...), nil
+	n := len(bufHrp)
+	if n > math.MaxUint8 {
+		return nil, errors.New("hrp too long")
+	}
+	return append([]byte{byte(n)}, bufHrp...), nil
 }
 
 func RemoveDuplicates(elements []string) []string {
@@ -197,7 +209,11 @@ func ConcatMessageAndChangePath(message []byte, path []string) []byte {
 	if path == nil {
 		return append([]byte{0}, msg...)
 	}
-	buffer := []byte{byte(len(path))}
+	n := len(path)
+	if n > math.MaxUint8 {
+		return nil
+	}
+	buffer := []byte{byte(n)}
 	for _, element := range path {
 		pathBuf, err := SerializePathSuffix(element)
 		if err != nil {
