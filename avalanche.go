@@ -19,6 +19,7 @@ package ledger_avalanche_go
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
@@ -125,7 +126,11 @@ func (ledger *LedgerAvalanche) GetPubKey(path string, show bool, hrp string, cha
 	payload = append(payload, serializedHRP...)
 	payload = append(payload, serializedChainID...)
 	payload = append(payload, serializedPath...)
-	payload[4] = byte(len(payload) - headerLen) // update length
+	bodyLen := len(payload) - headerLen
+	if bodyLen < 0 || bodyLen > math.MaxUint8 {
+		return nil, errors.New("payload too large")
+	}
+	payload[4] = byte(bodyLen)
 
 	response, err := ledger.api.Exchange(payload)
 	if err != nil {
@@ -177,7 +182,11 @@ func (ledger *LedgerAvalanche) GetExtPubKey(path string, show bool, hrp string, 
 	payload = append(payload, serializedHRP...)
 	payload = append(payload, serializedChainID...)
 	payload = append(payload, serializedPath...)
-	payload[4] = byte(len(payload) - headerLen) // update length
+	bodyLen := len(payload) - headerLen
+	if bodyLen < 0 || bodyLen > math.MaxUint8 {
+		return nil, nil, errors.New("payload too large")
+	}
+	payload[4] = byte(bodyLen)
 
 	response, err := ledger.api.Exchange(payload)
 	if err != nil {
@@ -245,7 +254,11 @@ func (ledger *LedgerAvalanche) SignHash(pathPrefix string, signingPaths []string
 		return nil, err
 	}
 
-	payload := []byte{CLA, INS_SIGN_HASH, FIRST_MESSAGE, byte(0x00), byte(len(serializedPath) + len(hash))}
+	bodyLen := len(serializedPath) + len(hash)
+	if bodyLen < 0 || bodyLen > math.MaxUint8 {
+		return nil, errors.New("payload too large")
+	}
+	payload := []byte{CLA, INS_SIGN_HASH, FIRST_MESSAGE, byte(0x00), byte(bodyLen)}
 	payload = append(payload, serializedPath...)
 	payload = append(payload, hash...)
 	firstResponse, err := ledger.api.Exchange(payload)
@@ -274,8 +287,12 @@ func SignAndCollect(signingPaths []string, ledger *LedgerAvalanche) (*ResponseSi
 			p1 = NEXT_MESSAGE
 		}
 
+		pathBufLen := len(pathBuf)
+		if pathBufLen > math.MaxUint8 {
+			return nil, errors.New("payload too large")
+		}
 		// Send path to sign hash that should be in device's ram memory
-		payload := []byte{CLA, INS_SIGN_HASH, byte(p1), byte(0x00), byte(len(pathBuf))}
+		payload := []byte{CLA, INS_SIGN_HASH, byte(p1), byte(0x00), byte(pathBufLen)}
 		payload = append(payload, pathBuf...)
 		response, err := ledger.api.Exchange(payload)
 		if err != nil {
