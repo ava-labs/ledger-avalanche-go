@@ -18,6 +18,12 @@ linters:
     - reassign
     - copyloopvar
     - staticcheck
+  settings:
+    goconst:
+      # Repeated literals in _test.go files are fixtures, not duplication.
+      # Test_RemoveDuplicates in particular feeds a list whose repetition is
+      # the thing under test, so hoisting it into a constant would obscure it.
+      ignore-tests: true
 
 formatters:
   enable:
