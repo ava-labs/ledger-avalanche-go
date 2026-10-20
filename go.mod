@@ -2,6 +2,8 @@ module github.com/ava-labs/ledger-avalanche-go
 
 go 1.25.0
 
+toolchain go1.26.10
+
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.5.0
 	github.com/mr-tron/base58 v1.3.0
