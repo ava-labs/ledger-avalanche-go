@@ -17,6 +17,8 @@ updates:
       prefix-development: 'chore'
       include: 'scope'
     target-branch: dev
+    cooldown:
+      default-days: 7
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
@@ -26,4 +28,6 @@ updates:
       prefix-development: 'chore'
       include: 'scope'
     target-branch: dev
+    cooldown:
+      default-days: 7
 
