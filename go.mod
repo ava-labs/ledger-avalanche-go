@@ -1,6 +1,6 @@
 module github.com/ava-labs/ledger-avalanche-go
 
-go 1.25.0
+go 1.26.10
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.5.0
